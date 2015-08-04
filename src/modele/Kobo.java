@@ -15,6 +15,8 @@ public class Kobo extends Observable{
 	private Card currentCard;
 	
 	private int nbPlayer;
+	
+	private boolean finish;
 
 	public Kobo(int nbJoueur) {
 		
@@ -32,6 +34,8 @@ public class Kobo extends Observable{
 		this.dealCard();
 
 		this.currentPlayer.viewCard();
+		
+		this.finish = false;
 
 	}
 
@@ -62,19 +66,44 @@ public class Kobo extends Observable{
 	}
 	
 	public void swapePlayer(){
-		if(this.currentPlayer == this.players.get(this.players.size()-1)){
-			this.currentPlayer = this.players.get(0);
+		if(finish && this.currentPlayer == this.players.get(this.players.size()-1)){
+			
+			getWinner();
+			System.out.println("Bravo "+this.currentPlayer.getName());
+			
 		}
-		else 
-		{
-			this.currentPlayer = this.players.get(this.players.indexOf(this.currentPlayer)+1);
-		}
-		if(currentPlayer instanceof IA){
-			this.defausseCard(((IA) this.currentPlayer).playCard(this.pioche()));
-			swapePlayer();
+		else {
+			if(this.currentPlayer == this.players.get(this.players.size()-1)){
+				this.currentPlayer = this.players.get(0);
+			}
+			else 
+			{
+				this.currentPlayer = this.players.get(this.players.indexOf(this.currentPlayer)+1);
+			}
+			if(currentPlayer instanceof IA){
+				this.defausseCard(((IA) this.currentPlayer).playCard(this.pioche()));
+				new java.util.Timer().schedule(new java.util.TimerTask() {
+					@Override
+					public void run() {
+						swapePlayer();
+					}
+				}, 2000);
+			}
 		}
 	}
 	
+	private void getWinner() {
+		int scoreMax = Integer.MAX_VALUE;
+		Player bestPlayer = new Player("Null");
+		for (Player player : this.players){
+			player.addOwnScore();
+			if(player.getScoreTotal()<scoreMax){
+				bestPlayer = player;
+			}
+		}
+		this.currentPlayer = bestPlayer;
+	}
+
 	public void notifierTous(){
 		this.setChanged();
 		this.notifyObservers();
@@ -82,5 +111,9 @@ public class Kobo extends Observable{
 
 	public Card getCurrentCard() {
 		return this.currentCard;
+	}
+
+	public void finishGame() {
+		this.finish = true;
 	}
 }
